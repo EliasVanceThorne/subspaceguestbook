@@ -287,19 +287,24 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
     const SUPABASE_URL = 'https://dvjtdszdzcdatqextzrz.supabase.co';
-    // METTI QUI LA CHIAVE LUNGA CHE INIZIA CON eyJ...
-    const SUPABASE_KEY = 'sb_publishable_y2ndok49LIbaDl7C89aiGg_lABxwt_u';
+    const SUPABASE_KEY = 'sb_publishable_y2ndok49LIbaDl7C89aiGg_lABxwt_u'; // ← SOSTITUISCI con la chiave completa!
+
     const ADMIN_MASTER_KEY = 'SIGMATHETA97ALPHA';
     
-    let supabase;
+    let supabaseClient;   // Rinominato per chiarezza
 
-    // RETE DI SALVATAGGIO DIAGNOSTICA ALL'AVVIO
+    // Inizializzazione corretta Supabase (CDN)
     try {
-        supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } catch (crashIniziale) {
-        alert("CRASH CRITICO ALL'AVVIO: Errore nei parametri di Supabase.\n" + crashIniziale.message);
+        const { createClient } = supabase;   // Importante: destrutturazione
+        supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("✅ Supabase client inizializzato correttamente");
+    } catch (err) {
+        console.error("Errore inizializzazione Supabase:", err);
+        alert("CRASH CRITICO ALL'AVVIO: Errore nei parametri di Supabase.\n" + err.message);
     }
 
     const display = document.getElementById('terminalDisplay');
@@ -311,15 +316,19 @@
 
     async function loadMessages() {
         try {
-            if (!supabase) return;
+            if (!supabaseClient) {
+                console.warn("Supabase non inizializzato");
+                return;
+            }
             
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('guestbook')
                 .select('*')
                 .order('id', { ascending: true })
                 .limit(50);
 
             if (error) {
+                console.error("Errore lettura:", error);
                 alert("DIAGNOSTICA SERVER (LETTURA FALLITA): " + error.message);
                 display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">ERROR // SUBSPACE LINK FAILURE:</div><div class="message-text">${error.message}</div></div></div>`;
                 return;
@@ -346,13 +355,14 @@
 
             display.scrollTop = display.scrollHeight;
         } catch (err) {
+            console.error("Errore rendering:", err);
             alert("ERRORE DI RENDERING INTERNO: " + err.message);
         }
     }
 
     async function transmitLog() {
         try {
-            if (!supabase) {
+            if (!supabaseClient) {
                 alert("IMPOSSIBILE TRASMETTERE: Il client Supabase non è inizializzato.");
                 return;
             }
@@ -372,26 +382,30 @@
             
             const userKey = generateUserKey();
 
-            // Chiamata esplicita con intercettazione errori
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('guestbook')
-                .insert([{ name, stardate, message, encryption_key: userKey }]);
+                .insert([{ 
+                    name, 
+                    stardate, 
+                    message, 
+                    encryption_key: userKey 
+                }]);
 
             if (error) {
+                console.error("Errore insert:", error);
                 alert("DIAGNOSTICA SERVER (INVIO RIFIUTATO): " + error.message);
-                btn.disabled = false;
-                btn.innerText = 'TRANSMIT';
             } else {
                 document.getElementById('guestMessage').value = '';
-                btn.disabled = false;
-                btn.innerText = 'TRANSMIT';
-                
                 alert(`TRANSMISSION SECURE.\nYOUR SUBSPACE ENCRYPTION KEY IS: ${userKey}\nSAVE THIS KEY IF YOU WISH TO DELETE THIS ENTRY LATER.`);
-                
                 loadMessages();
             }
-        } catch (errClick) {
-            alert("CRASH DURANTE L'INVIO: " + errClick.message);
+        } catch (err) {
+            console.error("Crash durante l'invio:", err);
+            alert("CRASH DURANTE L'INVIO: " + err.message);
+        } finally {
+            const btn = document.getElementById('transmitBtn');
+            btn.disabled = false;
+            btn.innerText = 'TRANSMIT';
         }
     }
 
@@ -400,7 +414,7 @@
         if (!inputKey) return;
 
         if (inputKey.trim() === correctKey || inputKey.trim() === ADMIN_MASTER_KEY) {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('guestbook')
                 .delete()
                 .eq('id', id);
@@ -416,8 +430,10 @@
         }
     }
 
-    // Forza il caricamento iniziale appena la pagina è pronta
-    setTimeout(loadMessages, 500);
+    // Caricamento iniziale
+    window.onload = () => {
+        setTimeout(loadMessages, 600);
+    };
 </script>
 
 </body>
