@@ -89,58 +89,13 @@
 
         h1 { font-size: 3.5rem; color: #9999FF; margin: 0; letter-spacing: 3px; line-height: 1; }
         
-        /* IL TUO STILE GIALLO ORIGINALE */
         .sub-title { color: #FF9900; font-size: 1.2rem; margin-bottom: 0px; }
 
-        /* LA NUOVA CASCATA DI CARICAMENTO CON LO STESSO IDENTICO STILE */
         .cascade-log { 
             color: #FF9900; 
             font-size: 1.2rem; 
             margin-top: 5px;
             margin-bottom: 20px; 
-            line-height: 1.4;
-        }
-
-        .welcome-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        /* QUESTO È IL COMANDO CSS PER IL TUO LOGO PROTETTO */
-        .logo-protetto {
-            width: 350px;          /* Larghezza del riquadro */
-            height: 350px;         /* Altezza del riquadro */
-            margin-bottom: 30px;
-            
-            /* Diciamo al CSS di iniettare l'immagine como sfondo invisibile */
-            background-image: url('logo.png');
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        .access-granted {
-            color: #00FFCC; 
-            font-size: 2.2rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin: 0 0 10px 0;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
-        }
-
-        .instruction-text {
-            color: #FFCC33;
-            font-size: 1.3rem;
-            letter-spacing: 1px;
-            max-width: 500px;
             line-height: 1.4;
         }
 
@@ -315,14 +270,14 @@
                 </div>
             </div>
 
-            <form class="terminal-form" id="lcarsForm">
+            <div class="terminal-form">
                 <div class="input-row">
                     <input type="text" id="guestName" class="lcars-input" placeholder="IDENTIFICATION (NAME / RANK)" required>
                     <input type="text" id="guestDate" class="lcars-input" placeholder="STARDATE / LOCATION">
                 </div>
                 <textarea id="guestMessage" class="lcars-textarea" placeholder="ENTER SUB-SPACE MESSAGE LOG..." required></textarea>
-                <button type="submit" class="lcars-btn">TRANSMIT</button>
-            </form>
+                <button type="button" class="lcars-btn" id="transmitBtn" onclick="transmitLog()">TRANSMIT</button>
+            </div>
 
         </div>
 
@@ -333,16 +288,21 @@
 </div>
 
 <script>
-    // Configura le tue credenziali Supabase qui sotto:
     const SUPABASE_URL = 'https://dvjtdszdzcdatqextzrz.supabase.co';
+    // METTI QUI LA CHIAVE LUNGA CHE INIZIA CON eyJ...
     const SUPABASE_KEY = 'sb_publishable_y2ndok49LIbaDl7C89aiGg_lABxwt_u';
-    
-    // CHIAVE AMMINISTRATORE UNIVERSALE
     const ADMIN_MASTER_KEY = 'SIGMATHETA97ALPHA';
     
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let supabase;
+
+    // RETE DI SALVATAGGIO DIAGNOSTICA ALL'AVVIO
+    try {
+        supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (crashIniziale) {
+        alert("CRASH CRITICO ALL'AVVIO: Errore nei parametri di Supabase.\n" + crashIniziale.message);
+    }
+
     const display = document.getElementById('terminalDisplay');
-    const form = document.getElementById('lcarsForm');
 
     function generateUserKey() {
         const num = Math.floor(1000 + Math.random() * 9000);
@@ -350,78 +310,96 @@
     }
 
     async function loadMessages() {
-        const { data, error } = await supabase
-            .from('guestbook')
-            .select('*')
-            .order('id', { ascending: true })
-            .limit(50);
+        try {
+            if (!supabase) return;
+            
+            const { data, error } = await supabase
+                .from('guestbook')
+                .select('*')
+                .order('id', { ascending: true })
+                .limit(50);
 
-        if (error) {
-            display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">ERROR // SUBSPACE LINK FAILURE:</div><div class="message-text">${error.message}</div></div></div>`;
-            return;
+            if (error) {
+                alert("DIAGNOSTICA SERVER (LETTURA FALLITA): " + error.message);
+                display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">ERROR // SUBSPACE LINK FAILURE:</div><div class="message-text">${error.message}</div></div></div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">SYSTEM LOG // NOTICE:</div><div class="message-text">NO ENTRY LOGS FOUND IN DATABASE. TERMINAL IS EMPTY.</div></div></div>`;
+                return;
+            }
+
+            display.innerHTML = '';
+            data.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'message-entry';
+                entryDiv.innerHTML = `
+                    <div class="message-body">
+                        <div class="message-meta">${entry.stardate} // ${entry.name}:</div>
+                        <div class="message-text">${entry.message}</div>
+                    </div>
+                    <button class="lcars-del-btn" onclick="deleteEntry(${entry.id}, '${entry.encryption_key}')">[X]</button>
+                `;
+                display.appendChild(entryDiv);
+            });
+
+            display.scrollTop = display.scrollHeight;
+        } catch (err) {
+            alert("ERRORE DI RENDERING INTERNO: " + err.message);
         }
-
-        if (data.length === 0) {
-            display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">SYSTEM LOG // NOTICE:</div><div class="message-text">NO ENTRY LOGS FOUND IN DATABASE. TERMINAL IS EMPTY.</div></div></div>`;
-            return;
-        }
-
-        display.innerHTML = '';
-        data.forEach(entry => {
-            const entryDiv = document.createElement('div');
-            entryDiv.className = 'message-entry';
-            entryDiv.innerHTML = `
-                <div class="message-body">
-                    <div class="message-meta">${entry.stardate} // ${entry.name}:</div>
-                    <div class="message-text">${entry.message}</div>
-                </div>
-                <button class="lcars-del-btn" onclick="deleteEntry(${entry.id}, '${entry.encryption_key}')">[X]</button>
-            `;
-            display.appendChild(entryDiv);
-        });
-
-        display.scrollTop = display.scrollHeight;
     }
 
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
+    async function transmitLog() {
+        try {
+            if (!supabase) {
+                alert("IMPOSSIBILE TRASMETTERE: Il client Supabase non è inizializzato.");
+                return;
+            }
 
-        const name = document.getElementById('guestName').value;
-        const stardate = document.getElementById('guestDate').value || "STARDATE UNKNOWN";
-        const message = document.getElementById('guestMessage').value;
-        
-        const userKey = generateUserKey();
-
-        const btn = form.querySelector('.lcars-btn');
-        btn.disabled = true;
-        btn.innerText = 'SENDING...';
-
-        const { error } = await supabase
-            .from('guestbook')
-            .insert([{ name, stardate, message, encryption_key: userKey }]);
-
-        if (error) {
-            alert("Subspace Transmission Failed: " + error.message);
-            btn.disabled = false;
-            btn.innerText = 'TRANSMIT';
-        } else {
-            document.getElementById('guestMessage').value = '';
-            btn.disabled = false;
-            btn.innerText = 'TRANSMIT';
+            const name = document.getElementById('guestName').value.trim();
+            const stardate = document.getElementById('guestDate').value.trim() || "STARDATE UNKNOWN";
+            const message = document.getElementById('guestMessage').value.trim();
             
-            alert(`TRANSMISSION SECURE.\nYOUR SUBSPACE ENCRYPTION KEY IS: ${userKey}\nSAVE THIS KEY IF YOU WISH TO DELETE THIS ENTRY LATER.`);
+            if (!name || !message) {
+                alert("ERROR: IDENTIFICATION AND MESSAGE LOG ARE REQUIRED FOR SUBSPACE TRANSMISSION.");
+                return;
+            }
+
+            const btn = document.getElementById('transmitBtn');
+            btn.disabled = true;
+            btn.innerText = 'SENDING...';
             
-            loadMessages();
+            const userKey = generateUserKey();
+
+            // Chiamata esplicita con intercettazione errori
+            const { error } = await supabase
+                .from('guestbook')
+                .insert([{ name, stardate, message, encryption_key: userKey }]);
+
+            if (error) {
+                alert("DIAGNOSTICA SERVER (INVIO RIFIUTATO): " + error.message);
+                btn.disabled = false;
+                btn.innerText = 'TRANSMIT';
+            } else {
+                document.getElementById('guestMessage').value = '';
+                btn.disabled = false;
+                btn.innerText = 'TRANSMIT';
+                
+                alert(`TRANSMISSION SECURE.\nYOUR SUBSPACE ENCRYPTION KEY IS: ${userKey}\nSAVE THIS KEY IF YOU WISH TO DELETE THIS ENTRY LATER.`);
+                
+                loadMessages();
+            }
+        } catch (errClick) {
+            alert("CRASH DURANTE L'INVIO: " + errClick.message);
         }
-    });
+    }
 
     async function deleteEntry(id, correctKey) {
         const inputKey = prompt("ENTER ENCRYPTION KEY OR MASTER COMMAND CODE TO WIPE DATA:");
-        
         if (!inputKey) return;
 
         if (inputKey.trim() === correctKey || inputKey.trim() === ADMIN_MASTER_KEY) {
-            
             const { error } = await supabase
                 .from('guestbook')
                 .delete()
@@ -438,7 +416,8 @@
         }
     }
 
-    loadMessages();
+    // Forza il caricamento iniziale appena la pagina è pronta
+    setTimeout(loadMessages, 500);
 </script>
 
 </body>
