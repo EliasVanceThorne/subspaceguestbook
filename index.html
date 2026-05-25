@@ -89,13 +89,58 @@
 
         h1 { font-size: 3.5rem; color: #9999FF; margin: 0; letter-spacing: 3px; line-height: 1; }
         
+        /* IL TUO STILE GIALLO ORIGINALE */
         .sub-title { color: #FF9900; font-size: 1.2rem; margin-bottom: 0px; }
 
+        /* LA NUOVA CASCATA DI CARICAMENTO CON LO STESSO IDENTICO STILE */
         .cascade-log { 
             color: #FF9900; 
             font-size: 1.2rem; 
             margin-top: 5px;
             margin-bottom: 20px; 
+            line-height: 1.4;
+        }
+
+        .welcome-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* QUESTO È IL COMANDO CSS PER IL TUO LOGO PROTETTO */
+        .logo-protetto {
+            width: 350px;          /* Larghezza del riquadro */
+            height: 350px;         /* Altezza del riquadro */
+            margin-bottom: 30px;
+            
+            /* Diciamo al CSS di iniettare l'immagine como sfondo invisibile */
+            background-image: url('logo.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .access-granted {
+            color: #00FFCC; 
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+        }
+
+        .instruction-text {
+            color: #FFCC33;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            max-width: 500px;
             line-height: 1.4;
         }
 
@@ -270,14 +315,14 @@
                 </div>
             </div>
 
-            <div class="terminal-form">
+            <form class="terminal-form" id="lcarsForm">
                 <div class="input-row">
                     <input type="text" id="guestName" class="lcars-input" placeholder="IDENTIFICATION (NAME / RANK)" required>
                     <input type="text" id="guestDate" class="lcars-input" placeholder="STARDATE / LOCATION">
                 </div>
                 <textarea id="guestMessage" class="lcars-textarea" placeholder="ENTER SUB-SPACE MESSAGE LOG..." required></textarea>
-                <button type="button" class="lcars-btn" id="transmitBtn" onclick="transmitLog()">TRANSMIT</button>
-            </div>
+                <button type="submit" class="lcars-btn">TRANSMIT</button>
+            </form>
 
         </div>
 
@@ -288,12 +333,16 @@
 </div>
 
 <script>
+    // Configura le tue credenziali Supabase qui sotto:
     const SUPABASE_URL = 'https://dvjtdszdzcdatqextzrz.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_y2ndok49LIbaDl7C89aiGg_lABxwt_u';
+    
+    // CHIAVE AMMINISTRATORE UNIVERSALE
     const ADMIN_MASTER_KEY = 'SIGMATHETA97ALPHA';
     
     const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const display = document.getElementById('terminalDisplay');
+    const form = document.getElementById('lcarsForm');
 
     function generateUserKey() {
         const num = Math.floor(1000 + Math.random() * 9000);
@@ -312,7 +361,7 @@
             return;
         }
 
-        if (!data || data.length === 0) {
+        if (data.length === 0) {
             display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">SYSTEM LOG // NOTICE:</div><div class="message-text">NO ENTRY LOGS FOUND IN DATABASE. TERMINAL IS EMPTY.</div></div></div>`;
             return;
         }
@@ -334,21 +383,18 @@
         display.scrollTop = display.scrollHeight;
     }
 
-    async function transmitLog() {
-        const name = document.getElementById('guestName').value.trim();
-        const stardate = document.getElementById('guestDate').value.trim() || "STARDATE UNKNOWN";
-        const message = document.getElementById('guestMessage').value.trim();
-        
-        if (!name || !message) {
-            alert("ERROR: IDENTIFICATION AND MESSAGE LOG ARE REQUIRED FOR SUBSPACE TRANSMISSION.");
-            return;
-        }
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-        const btn = document.getElementById('transmitBtn');
-        btn.disabled = true;
-        btn.innerText = 'SENDING...';
+        const name = document.getElementById('guestName').value;
+        const stardate = document.getElementById('guestDate').value || "STARDATE UNKNOWN";
+        const message = document.getElementById('guestMessage').value;
         
         const userKey = generateUserKey();
+
+        const btn = form.querySelector('.lcars-btn');
+        btn.disabled = true;
+        btn.innerText = 'SENDING...';
 
         const { error } = await supabase
             .from('guestbook')
@@ -367,13 +413,15 @@
             
             loadMessages();
         }
-    }
+    });
 
     async function deleteEntry(id, correctKey) {
         const inputKey = prompt("ENTER ENCRYPTION KEY OR MASTER COMMAND CODE TO WIPE DATA:");
+        
         if (!inputKey) return;
 
         if (inputKey.trim() === correctKey || inputKey.trim() === ADMIN_MASTER_KEY) {
+            
             const { error } = await supabase
                 .from('guestbook')
                 .delete()
@@ -390,7 +438,6 @@
         }
     }
 
-    // Caricamento iniziale
     loadMessages();
 </script>
 
