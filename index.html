@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STARFLEET PARALLEL TERMINAL</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: black;
+            color: #FF9900;
+            font-family: 'Antonio', sans-serif;
+            text-transform: uppercase;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* STRUTTURA FRAME LCARS LATERALE */
+        .lcars-left {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            background-color: transparent;
+            margin-top: 25px;
+            flex-shrink: 0;
+        }
+
+        .lcars-block {
+            height: 45px;
+            margin-bottom: 8px;
+            color: black;
+            font-weight: bold;
+            font-size: 1.1rem;
+            line-height: 45px;
+            padding-right: 15px;
+            text-align: right;
+            border-radius: 0 15px 15px 0;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .lcars-block.nav-link:hover {
+            filter: brightness(1.3);
+            padding-right: 25px;
+        }
+
+        .lcars-curve-joint {
+            background-color: #9999FF;
+            height: 60px;
+            border-radius: 0 70px 0 0;
+            margin-bottom: -15px;
+        }
+
+        /* Palette Colori Standard LCARS */
+        .color-1 { background-color: #FF9900; }
+        .color-2 { background-color: #CC99CC; }
+        .color-3 { background-color: #FFCC33; }
+        .color-4 { background-color: #9999FF; }
+        .color-5 { background-color: #FF6666; }
+
+        /* CONTENITORE PRINCIPALE COORDINATO */
+        .main-frame {
+            flex-grow: 1;
+            padding: 40px;
+            border-left: 20px solid #9999FF;
+            border-top: 45px solid #9999FF;
+            border-top-left-radius: 70px;
+            margin-top: 25px;
+            margin-right: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-scroll {
+            flex-grow: 1;
+            margin-left: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { font-size: 3.5rem; color: #9999FF; margin: 0; letter-spacing: 3px; line-height: 1; }
+        
+        /* IL TUO STILE GIALLO ORIGINALE */
+        .sub-title { color: #FF9900; font-size: 1.2rem; margin-bottom: 0px; }
+
+        /* LA NUOVA CASCATA DI CARICAMENTO CON LO STESSO IDENTICO STILE */
+        .cascade-log { 
+            color: #FF9900; 
+            font-size: 1.2rem; 
+            margin-top: 5px;
+            margin-bottom: 20px; 
+            line-height: 1.4;
+        }
+
+        .welcome-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* QUESTO È IL COMANDO CSS PER IL TUO LOGO PROTETTO */
+        .logo-protetto {
+            width: 350px;          /* Larghezza del riquadro */
+            height: 350px;         /* Altezza del riquadro */
+            margin-bottom: 30px;
+            
+            /* Diciamo al CSS di iniettare l'immagine como sfondo invisibile */
+            background-image: url('logo.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .access-granted {
+            color: #00FFCC; 
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+        }
+
+        .instruction-text {
+            color: #FFCC33;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            max-width: 500px;
+            line-height: 1.4;
+        }
+
+        /* GUESTBOOK (STILE LCARS) */
+        .guestbook-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .terminal-display {
+            flex-grow: 1;
+            min-height: 200px;
+            border: 2px solid #FFCC33;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: rgba(255, 204, 51, 0.05);
+            overflow-y: auto;
+        }
+
+        .message-entry {
+            border-bottom: 1px dashed #CC99CC;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .message-body {
+            flex-grow: 1;
+        }
+
+        .message-meta {
+            color: #CC99CC;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .message-text {
+            color: #FFCC33;
+            font-size: 1.1rem;
+        }
+
+        .lcars-del-btn {
+            background-color: #FF6666;
+            color: black;
+            border: none;
+            padding: 2px 8px;
+            font-family: 'Antonio', sans-serif;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: 0.2s;
+        }
+
+        .lcars-del-btn:hover {
+            filter: brightness(1.4);
+        }
+
+        .terminal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .lcars-input, .lcars-textarea {
+            background-color: #111;
+            border: 2px solid #FF9900;
+            color: #FFCC33;
+            font-family: 'Antonio', sans-serif;
+            font-size: 1.2rem;
+            padding: 10px 15px;
+            box-sizing: border-box;
+        }
+
+        .lcars-input {
+            flex: 1;
+            border-radius: 20px;
+        }
+
+        .lcars-textarea {
+            width: 100%;
+            height: 80px;
+            resize: none;
+            border-radius: 15px;
+        }
+
+        .lcars-input:focus, .lcars-textarea:focus {
+            outline: none;
+            border-color: #9999FF;
+            background-color: #151515;
+        }
+
+        .lcars-btn {
+            background-color: #FF6666;
+            color: black;
+            font-family: 'Antonio', sans-serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            align-self: flex-end;
+            transition: 0.2s;
+        }
+
+        .lcars-btn:hover {
+            filter: brightness(1.3);
+            letter-spacing: 1px;
+        }
+
+        .footer { 
+            margin-top: auto; 
+            color: #444; 
+            font-size: 0.9rem; 
+            letter-spacing: 1px;
+            border-top: 1px solid #222;
+            padding-top: 10px;
+        }
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="lcars-left">
+    <a href="#" class="lcars-block color-1 nav-link">SYS_LOG</a>
+    <a href="#" class="lcars-block color-2 nav-link">THE THEORY</a>
+    <a href="#" class="lcars-block color-3 nav-link">ARCHIVES</a>
+    <a href="#" class="lcars-block color-4 nav-link">SUBSPACE</a>
+    <a href="#" class="lcars-block color-2 nav-link">COMMS</a>
+    <a href="#" class="lcars-block color-4 nav-link">TRICORDER</a>
+    <a href="#" class="lcars-block color-1 nav-link">CONVERTERS</a>
+    <a href="#" class="lcars-block color-2 nav-link">TOOLS</a>
+    <a href="#" class="lcars-block color-5 nav-link">COD_902</a>
+    
+    <div class="lcars-curve-joint"></div>
+</div>
+
+<div class="main-frame">
+    <div class="content-scroll">
+        <h1>SUBSPACE NOTICEBOARD</h1>
+        
+        <div class="sub-title">STARFLEET COMMAND DATA NETWORK // ACCESS POINT 01</div>
+
+        <div class="cascade-log">
+            SUBSPACE UPLINK SECURE // VIA DEEP SPACE 9<br>
+            ACCESS GRANTED BY OMEGA CODE // INTEGRITY AT 100%<br>
+            ROUTING PROGRAM: "THE THORNE THEORY" [v4.1.0-BETA]<br>
+        </div>
+
+        <div class="guestbook-container">
+            
+            <div class="terminal-display" id="terminalDisplay">
+                <div class="message-entry">
+                    <div class="message-body">
+                        <div class="message-meta">SYSTEM LOG // COMPUTER:</div>
+                        <div class="message-text">ESTABLISHING SUBSPACE LINK TO DATA BANK...</div>
+                    </div>
+                </div>
+            </div>
+
+            <form class="terminal-form" id="lcarsForm">
+                <div class="input-row">
+                    <input type="text" id="guestName" class="lcars-input" placeholder="IDENTIFICATION (NAME / RANK)" required>
+                    <input type="text" id="guestDate" class="lcars-input" placeholder="STARDATE / LOCATION">
+                </div>
+                <textarea id="guestMessage" class="lcars-textarea" placeholder="ENTER SUB-SPACE MESSAGE LOG..." required></textarea>
+                <button type="submit" class="lcars-btn">TRANSMIT</button>
+            </form>
+
+        </div>
+
+        <div class="footer">
+            LCARS INTERFACE 3.6B | SYSTEM STATUS: ONLINE | SECURE CONNECTION ESTABLISHED
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configura le tue credenziali Supabase qui sotto:
+    const SUPABASE_URL = 'https://dvjtdszdzcdatqextzrz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_y2ndok49LIbaDl7C89aiGg_lABxwt_u';
+    
+    // CHIAVE AMMINISTRATORE UNIVERSALE
+    const ADMIN_MASTER_KEY = 'SIGMATHETA97ALPHA';
+    
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const display = document.getElementById('terminalDisplay');
+    const form = document.getElementById('lcarsForm');
+
+    function generateUserKey() {
+        const num = Math.floor(1000 + Math.random() * 9000);
+        return `NX-${num}`;
+    }
+
+    async function loadMessages() {
+        const { data, error } = await supabase
+            .from('guestbook')
+            .select('*')
+            .order('id', { ascending: true })
+            .limit(50);
+
+        if (error) {
+            display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">ERROR // SUBSPACE LINK FAILURE:</div><div class="message-text">${error.message}</div></div></div>`;
+            return;
+        }
+
+        if (data.length === 0) {
+            display.innerHTML = `<div class="message-entry"><div class="message-body"><div class="message-meta">SYSTEM LOG // NOTICE:</div><div class="message-text">NO ENTRY LOGS FOUND IN DATABASE. TERMINAL IS EMPTY.</div></div></div>`;
+            return;
+        }
+
+        display.innerHTML = '';
+        data.forEach(entry => {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'message-entry';
+            entryDiv.innerHTML = `
+                <div class="message-body">
+                    <div class="message-meta">${entry.stardate} // ${entry.name}:</div>
+                    <div class="message-text">${entry.message}</div>
+                </div>
+                <button class="lcars-del-btn" onclick="deleteEntry(${entry.id}, '${entry.encryption_key}')">[X]</button>
+            `;
+            display.appendChild(entryDiv);
+        });
+
+        display.scrollTop = display.scrollHeight;
+    }
+
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('guestName').value;
+        const stardate = document.getElementById('guestDate').value || "STARDATE UNKNOWN";
+        const message = document.getElementById('guestMessage').value;
+        
+        const userKey = generateUserKey();
+
+        const btn = form.querySelector('.lcars-btn');
+        btn.disabled = true;
+        btn.innerText = 'SENDING...';
+
+        const { error } = await supabase
+            .from('guestbook')
+            .insert([{ name, stardate, message, encryption_key: userKey }]);
+
+        if (error) {
+            alert("Subspace Transmission Failed: " + error.message);
+            btn.disabled = false;
+            btn.innerText = 'TRANSMIT';
+        } else {
+            document.getElementById('guestMessage').value = '';
+            btn.disabled = false;
+            btn.innerText = 'TRANSMIT';
+            
+            alert(`TRANSMISSION SECURE.\nYOUR SUBSPACE ENCRYPTION KEY IS: ${userKey}\nSAVE THIS KEY IF YOU WISH TO DELETE THIS ENTRY LATER.`);
+            
+            loadMessages();
+        }
+    });
+
+    async function deleteEntry(id, correctKey) {
+        const inputKey = prompt("ENTER ENCRYPTION KEY OR MASTER COMMAND CODE TO WIPE DATA:");
+        
+        if (!inputKey) return;
+
+        if (inputKey.trim() === correctKey || inputKey.trim() === ADMIN_MASTER_KEY) {
+            
+            const { error } = await supabase
+                .from('guestbook')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Wipe operation failed: " + error.message);
+            } else {
+                alert("DATA WIPED SUCCESSFULLY FROM TERMINAL CORES.");
+                loadMessages();
+            }
+        } else {
+            alert("ERROR: INVALID ENCRYPTION KEY. ACCESS DENIED.");
+        }
+    }
+
+    loadMessages();
+</script>
+
+</body>
+</html>
